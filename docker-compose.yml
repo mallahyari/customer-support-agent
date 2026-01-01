@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  # Main application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chirp-app
+    ports:
+      - "8000:8000"
+    environment:
+      # Database
+      - DATABASE_URL=sqlite+aiosqlite:///./data/chatbots.db
+
+      # Qdrant (local mode)
+      - QDRANT_PATH=/app/data/qdrant
+      # Alternative: Server mode (uncomment if using qdrant service)
+      # - QDRANT_URL=http://qdrant:6333
+
+      # OpenAI API
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+      # Admin credentials
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+
+      # Session secret
+      - SECRET_KEY=${SECRET_KEY}
+
+      # Application settings
+      - UPLOAD_PATH=/app/data/uploads
+      - MESSAGE_LIMIT_DEFAULT=1000
+      - MAX_SCRAPE_WORDS=10000
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+    volumes:
+      # Persist data directory
+      - ./data:/app/data
+
+      # Optional: Mount local backend code for development
+      # - ./backend:/app/backend
+
+    restart: unless-stopped
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    networks:
+      - chirp-network
+
+  # Optional: Qdrant server (for production deployments)
+  # Uncomment this service and update app environment to use QDRANT_URL
+  # qdrant:
+  #   image: qdrant/qdrant:latest
+  #   container_name: chirp-qdrant
+  #   ports:
+  #     - "6333:6333"
+  #   volumes:
+  #     - qdrant-storage:/qdrant/storage
+  #   restart: unless-stopped
+  #   networks:
+  #     - chirp-network
+
+networks:
+  chirp-network:
+    driver: bridge
+
+# volumes:
+#   qdrant-storage:

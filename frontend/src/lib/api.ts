@@ -141,7 +141,7 @@ export const botApi = {
 
   async uploadAvatar(id: string, file: File): Promise<Bot> {
     const formData = new FormData()
-    formData.append('avatar', file)
+    formData.append('file', file)
 
     const response = await fetch(`${API_URL}/api/admin/bots/${id}/avatar`, {
       method: 'POST',

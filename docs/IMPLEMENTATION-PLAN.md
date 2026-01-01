@@ -263,10 +263,10 @@ backend/
 
 **Tasks:**
 
-- [ ] Implement `GET /api/public/config/{bot_id}` (Deferred - already exists in Phase 2.2):
+- [x] Implement `GET /api/public/config/{bot_id}`:
   - Validate API key (query param)
   - Return bot config (name, welcome_message, avatar_url, accent_color, position, button settings)
-- [ ] Add rate limiting (60 req/min per bot_id)
+- [ ] Add rate limiting (60 req/min per bot_id) (Deferred - not critical for MVP)
 
 ---
 

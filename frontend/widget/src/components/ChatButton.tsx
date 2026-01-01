@@ -14,6 +14,7 @@ export default function ChatButton({ botConfig, onClick }: ChatButtonProps) {
   const accentColor = botConfig.accent_color || '#3B82F6'
   const showText = botConfig.show_button_text
   const buttonText = botConfig.button_text || 'Chat with us'
+  const avatarUrl = botConfig.avatar_url
 
   // Position styles
   const positionStyles: Record<string, React.CSSProperties> = {
@@ -45,6 +46,29 @@ export default function ChatButton({ botConfig, onClick }: ChatButtonProps) {
     transition: 'transform 0.2s, box-shadow 0.2s',
   }
 
+  const avatarStyle: React.CSSProperties = {
+    width: showText ? '24px' : '40px',
+    height: showText ? '24px' : '40px',
+    borderRadius: '50%',
+    objectFit: 'cover',
+  }
+
+  // Chat icon component
+  const ChatIcon = () => (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  )
+
   return (
     <button
       style={buttonStyle}
@@ -59,21 +83,21 @@ export default function ChatButton({ botConfig, onClick }: ChatButtonProps) {
       }}
       aria-label="Open chat"
     >
-      {/* Chat icon SVG */}
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
-
-      {showText && <span>{buttonText}</span>}
+      {showText ? (
+        // Button with text: show avatar (if available) + text + chat icon
+        <>
+          {avatarUrl && <img src={avatarUrl} alt={botConfig.name} style={avatarStyle} />}
+          <span>{buttonText}</span>
+          <ChatIcon />
+        </>
+      ) : (
+        // Button without text: show avatar (if available) or chat icon
+        avatarUrl ? (
+          <img src={avatarUrl} alt={botConfig.name} style={avatarStyle} />
+        ) : (
+          <ChatIcon />
+        )
+      )}
     </button>
   )
 }

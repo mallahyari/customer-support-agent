@@ -82,12 +82,16 @@ export function ChatWidgetPreview({
             style={{ backgroundColor: accentColor }}
           >
             <div className="flex items-center space-x-3">
-              {avatarUrl && (
+              {avatarUrl ? (
                 <img
                   src={avatarUrl}
                   alt={botName}
-                  className="w-8 h-8 rounded-full bg-white"
+                  className="w-8 h-8 rounded-full object-cover bg-white/20"
                 />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
+                  {botName ? botName.charAt(0).toUpperCase() : 'B'}
+                </div>
               )}
               <span className="font-semibold text-white">{botName || 'Bot'}</span>
             </div>

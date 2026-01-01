@@ -130,19 +130,19 @@ backend/
 
 ### 3.1 Qdrant Client Setup
 **Tasks:**
-- [ ] Create `services/qdrant_client.py`:
+- [x] Create `services/qdrant_client.py`:
   - Initialize QdrantClient based on config (local path or server URL)
   - Create collection `chirp_embeddings` if not exists
   - Configure vector params (size=1536, distance=Cosine)
   - Create payload indexes for `bot_id`
-- [ ] Add Qdrant health check to `/api/health`
+- [x] Add Qdrant health check to `/api/health`
 
 ### 3.2 Vector Operations
 **Tasks:**
-- [ ] Implement upsert function (add/update vectors with payload)
-- [ ] Implement search function (query by embedding, filter by bot_id)
-- [ ] Implement delete function (remove all vectors for a bot_id)
-- [ ] Add similarity threshold filtering (> 0.7)
+- [x] Implement upsert function (add/update vectors with payload)
+- [x] Implement search function (query by embedding, filter by bot_id)
+- [x] Implement delete function (remove all vectors for a bot_id)
+- [x] Add similarity threshold filtering (> 0.7)
 
 ---
 

@@ -64,12 +64,27 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to initialize admin user: {e}")
         raise
 
+    # Initialize Qdrant collection (Phase 3.1)
+    try:
+        from app.services.qdrant_client import init_collection
+
+        await init_collection()
+        logger.info("Qdrant collection initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize Qdrant collection: {e}")
+        raise
+
     yield
 
     # Cleanup on shutdown
     logger.info("Shutting down application")
     await close_db()
     logger.info("Database connections closed")
+
+    # Close Qdrant client
+    from app.services.qdrant_client import close_client
+
+    await close_client()
 
 
 # Create FastAPI app
@@ -98,14 +113,26 @@ async def health_check():
     Health check endpoint.
 
     Returns:
-        JSON response with service status and timestamp
+        JSON response with service status, timestamp, and component health
     """
+    from app.services.qdrant_client import health_check as qdrant_health
+
+    # Check Qdrant health
+    qdrant_status = await qdrant_health()
+
+    # Overall health is healthy only if all components are healthy
+    overall_healthy = qdrant_status.get("healthy", False)
+
     return JSONResponse(
         content={
-            "status": "healthy",
+            "status": "healthy" if overall_healthy else "unhealthy",
             "service": "chirp-api",
             "version": "0.1.0",
             "timestamp": datetime.utcnow().isoformat(),
+            "components": {
+                "database": "healthy",  # SQLite is always available if app started
+                "qdrant": qdrant_status,
+            },
         }
     )
 

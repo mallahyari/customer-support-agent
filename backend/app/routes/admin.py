@@ -7,19 +7,27 @@ Endpoints:
 - GET /api/admin/bots/{bot_id} - Get bot details
 - PUT /api/admin/bots/{bot_id} - Update bot
 - DELETE /api/admin/bots/{bot_id} - Delete bot
+- POST /api/admin/bots/{bot_id}/avatar - Upload avatar
+- DELETE /api/admin/bots/{bot_id}/avatar - Delete avatar
 """
 
 import logging
+import time
+from pathlib import Path
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from PIL import Image
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.database import get_db
 from app.dependencies import get_current_admin
 from app.models import AdminSession, Bot
 from app.schemas import BotCreate, BotResponse, BotUpdate, MessageOnlyResponse
+
+settings = get_settings()
 
 logger = logging.getLogger(__name__)
 
@@ -210,3 +218,169 @@ async def delete_bot(
     logger.info(f"Admin {admin.username} deleted bot: {bot_id} ({bot_name})")
 
     return MessageOnlyResponse(message=f"Bot '{bot_name}' deleted successfully")
+
+
+@router.post("/bots/{bot_id}/avatar", response_model=BotResponse)
+async def upload_avatar(
+    bot_id: str,
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    admin: AdminSession = Depends(get_current_admin),
+):
+    """
+    Upload and process bot avatar.
+
+    Validates file type using magic numbers, checks size, resizes to 64x64,
+    and saves as PNG. Deletes old avatar if exists.
+
+    Args:
+        bot_id: Bot UUID
+        file: Uploaded image file
+        db: Database session
+        admin: Current authenticated admin
+
+    Returns:
+        Updated BotResponse with new avatar_url
+
+    Raises:
+        HTTPException: 404 if bot not found, 400 if validation fails
+    """
+    # Get existing bot
+    result = await db.execute(select(Bot).where(Bot.id == bot_id))
+    bot = result.scalar_one_or_none()
+
+    if not bot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Bot with id {bot_id} not found",
+        )
+
+    # Validate file size (max 500KB)
+    contents = await file.read()
+    if len(contents) > 500 * 1024:  # 500KB
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File size exceeds 500KB limit",
+        )
+
+    # Validate file type using magic numbers (first few bytes)
+    # PNG: 89 50 4E 47, JPEG: FF D8 FF, GIF: 47 49 46
+    if not (
+        contents.startswith(b"\x89PNG")  # PNG
+        or contents.startswith(b"\xff\xd8\xff")  # JPEG
+        or contents.startswith(b"GIF8")  # GIF
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid image format. Only PNG, JPEG, and GIF are supported.",
+        )
+
+    # Open image with Pillow
+    try:
+        from io import BytesIO
+
+        image = Image.open(BytesIO(contents))
+
+        # Convert to RGB if necessary (for transparency)
+        if image.mode in ("RGBA", "LA", "P"):
+            # Create white background
+            background = Image.new("RGB", image.size, (255, 255, 255))
+            if image.mode == "P":
+                image = image.convert("RGBA")
+            background.paste(image, mask=image.split()[-1] if image.mode in ("RGBA", "LA") else None)
+            image = background
+
+        # Resize to 64x64
+        image = image.resize((64, 64), Image.Resampling.LANCZOS)
+
+    except Exception as e:
+        logger.error(f"Failed to process image: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to process image: {str(e)}",
+        )
+
+    # Create avatars directory if not exists
+    avatar_dir = Path(settings.upload_path) / "avatars"
+    avatar_dir.mkdir(parents=True, exist_ok=True)
+
+    # Delete old avatar if exists
+    old_avatars = list(avatar_dir.glob(f"{bot_id}_*.png"))
+    for old_avatar in old_avatars:
+        old_avatar.unlink()
+        logger.info(f"Deleted old avatar: {old_avatar}")
+
+    # Save new avatar
+    timestamp = int(time.time())
+    avatar_filename = f"{bot_id}_{timestamp}.png"
+    avatar_path = avatar_dir / avatar_filename
+
+    image.save(avatar_path, format="PNG", optimize=True)
+
+    # Update bot avatar_url
+    bot.avatar_url = f"/api/public/avatar/{bot_id}"
+
+    await db.commit()
+    await db.refresh(bot)
+
+    logger.info(f"Admin {admin.username} uploaded avatar for bot: {bot.id} ({bot.name})")
+
+    return bot
+
+
+@router.delete("/bots/{bot_id}/avatar", response_model=MessageOnlyResponse)
+async def delete_avatar(
+    bot_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: AdminSession = Depends(get_current_admin),
+):
+    """
+    Delete bot avatar.
+
+    Removes avatar file from disk and clears avatar_url.
+
+    Args:
+        bot_id: Bot UUID
+        db: Database session
+        admin: Current authenticated admin
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 404 if bot not found or avatar doesn't exist
+    """
+    # Get existing bot
+    result = await db.execute(select(Bot).where(Bot.id == bot_id))
+    bot = result.scalar_one_or_none()
+
+    if not bot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Bot with id {bot_id} not found",
+        )
+
+    # Find and delete avatar files
+    avatar_dir = Path(settings.upload_path) / "avatars"
+    avatar_files = list(avatar_dir.glob(f"{bot_id}_*.png"))
+
+    if not avatar_files:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No avatar found for bot {bot_id}",
+        )
+
+    # Delete all avatar files for this bot
+    for avatar_file in avatar_files:
+        avatar_file.unlink()
+        logger.info(f"Deleted avatar file: {avatar_file}")
+
+    # Clear avatar_url
+    bot.avatar_url = None
+
+    await db.commit()
+    await db.refresh(bot)
+
+    logger.info(f"Admin {admin.username} deleted avatar for bot: {bot.id} ({bot.name})")
+
+    return MessageOnlyResponse(message="Avatar deleted successfully")

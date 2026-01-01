@@ -223,30 +223,30 @@ backend/
 
 **Tasks:**
 
-- [ ] Implement `services/chat_service.py`:
+- [x] Implement `services/chat_service.py`:
   - Embed user question with OpenAI
   - Query Qdrant for top 3 similar chunks (filtered by bot_id)
-  - Filter by similarity score > 0.7
+  - Filter by similarity score > 0.6 (adjusted from 0.7 after testing)
   - Return chunks with content
 
 ### 5.2 Response Generation
 
 **Tasks:**
 
-- [ ] Build prompt template with:
+- [x] Build prompt template with:
   - Bot name and context
   - Retrieved chunks
   - Conversation history (last 10 messages)
   - User question
   - Instructions (answer only from context)
-- [ ] Call OpenAI gpt-4o-mini with streaming enabled
-- [ ] Yield tokens as they arrive
+- [x] Call OpenAI gpt-4o-mini with streaming enabled
+- [x] Yield tokens as they arrive
 
 ### 5.3 Chat Endpoint
 
 **Tasks:**
 
-- [ ] Implement `POST /api/chat` in `routes/chat.py`:
+- [x] Implement `POST /api/chat` in `routes/chat.py`:
   - Validate API key against bot record
   - Check bot-level rate limit (message_count < message_limit)
   - Check session-level rate limit (10 msg/min)
@@ -256,14 +256,14 @@ backend/
   - Stream response via SSE
   - Save assistant response to database
   - Increment message_count
-- [ ] Set proper headers for SSE (Content-Type, Cache-Control)
-- [ ] Handle errors gracefully (return error events)
+- [x] Set proper headers for SSE (Content-Type, Cache-Control)
+- [x] Handle errors gracefully (return error events)
 
 ### 5.4 Widget Configuration
 
 **Tasks:**
 
-- [ ] Implement `GET /api/public/config/{bot_id}`:
+- [ ] Implement `GET /api/public/config/{bot_id}` (Deferred - already exists in Phase 2.2):
   - Validate API key (query param)
   - Return bot config (name, welcome_message, avatar_url, accent_color, position, button settings)
 - [ ] Add rate limiting (60 req/min per bot_id)

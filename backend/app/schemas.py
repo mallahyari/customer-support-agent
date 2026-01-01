@@ -6,7 +6,7 @@ Separate from SQLAlchemy models to maintain clean separation of concerns.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field, field_validator
 

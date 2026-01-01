@@ -163,9 +163,9 @@ app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 from app.routes import public
 app.include_router(public.router, prefix="/api/public", tags=["Public"])
 
-# TODO Phase 5.3: Mount chat routes
-# from app.routes import chat
-# app.include_router(chat.router, prefix="/api", tags=["Chat"])
+# Phase 5: Mount chat routes
+from app.routes import chat
+app.include_router(chat.router, prefix="/api", tags=["Chat"])
 
 
 if __name__ == "__main__":

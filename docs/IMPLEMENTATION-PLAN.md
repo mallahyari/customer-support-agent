@@ -60,35 +60,35 @@ backend/
 ```
 
 **Tasks:**
-- [ ] Create app package structure with `__init__.py` files
-- [ ] Implement `config.py` with Pydantic Settings for environment variables
-- [ ] Create `main.py` with FastAPI app, CORS middleware, route mounting
-- [ ] Add health check endpoint: `GET /api/health`
+- [x] Create app package structure with `__init__.py` files
+- [x] Implement `config.py` with Pydantic Settings for environment variables
+- [x] Create `main.py` with FastAPI app, CORS middleware, route mounting
+- [x] Add health check endpoint: `GET /api/health`
 
 ### 1.2 Database Layer
 **Tasks:**
-- [ ] Implement `database.py` with async SQLAlchemy engine and session
-- [ ] Create `models.py` with ORM models:
+- [x] Implement `database.py` with async SQLAlchemy engine and session
+- [x] Create `models.py` with ORM models:
   - `Bot` (id, name, welcome_message, avatar_url, accent_color, position, show_button_text, button_text, source_type, source_content, api_key, message_count, message_limit, created_at, updated_at)
   - `Conversation` (id, bot_id, session_id, created_at, updated_at)
   - `Message` (id, conversation_id, role, content, created_at)
   - `AdminSession` (id, username, token_hash, expires_at, created_at)
-- [ ] Create `schemas.py` with Pydantic models for API validation
-- [ ] Add database initialization on app startup (create tables)
-- [ ] Create indexes for performance (bot_id, session_id, api_key)
+- [x] Create `schemas.py` with Pydantic models for API validation
+- [x] Add database initialization on app startup (create tables)
+- [x] Create indexes for performance (bot_id, session_id, api_key)
 
 ### 1.3 Authentication System
 **Tasks:**
-- [ ] Implement `auth_service.py`:
+- [x] Implement `auth_service.py`:
   - Password hashing with bcrypt (cost factor 12)
   - Session token generation (UUID v4)
   - Token hashing (SHA-256) before storage
   - Session validation and expiry check
-- [ ] Create admin user on first startup (from env vars)
-- [ ] Implement `routes/auth.py`:
+- [x] Create admin user on first startup (from env vars)
+- [x] Implement `routes/auth.py`:
   - `POST /api/auth/login` - Validate credentials, create session, set cookie
   - `POST /api/auth/logout` - Clear session from DB and cookie
-- [ ] Create `dependencies.py` with `get_current_admin` dependency for protected routes
+- [x] Create `dependencies.py` with `get_current_admin` dependency for protected routes
 
 ---
 
@@ -96,27 +96,27 @@ backend/
 
 ### 2.1 Bot CRUD Endpoints
 **Tasks:**
-- [ ] Implement `routes/admin.py`:
+- [x] Implement `routes/admin.py`:
   - `GET /api/admin/bots` - List all bots with stats
   - `POST /api/admin/bots` - Create new bot (generate UUID, API key)
   - `GET /api/admin/bots/{bot_id}` - Get single bot details
   - `PUT /api/admin/bots/{bot_id}` - Update bot configuration
   - `DELETE /api/admin/bots/{bot_id}` - Delete bot (cascade to Qdrant)
-- [ ] Add request/response schemas for all endpoints
-- [ ] Add error handling (404, 400, 500)
+- [x] Add request/response schemas for all endpoints
+- [x] Add error handling (404, 400, 500)
 
 ### 2.2 Avatar Management
 **Tasks:**
-- [ ] Implement avatar upload endpoint:
+- [x] Implement avatar upload endpoint:
   - `POST /api/admin/bots/{bot_id}/avatar`
   - Validate file type (magic numbers, not just extension)
   - Check file size (max 500KB)
   - Resize to 64x64px (use Pillow)
   - Save to `./data/uploads/avatars/{bot_id}_{timestamp}.png`
   - Delete old avatar if exists
-- [ ] Implement avatar delete: `DELETE /api/admin/bots/{bot_id}/avatar`
-- [ ] Implement public avatar serving: `GET /api/public/avatar/{bot_id}`
-- [ ] Add Pillow to requirements.txt
+- [x] Implement avatar delete: `DELETE /api/admin/bots/{bot_id}/avatar`
+- [x] Implement public avatar serving: `GET /api/public/avatar/{bot_id}`
+- [x] Add Pillow to requirements.txt
 
 ### 2.3 API Key Management
 **Tasks:**

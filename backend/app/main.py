@@ -50,7 +50,19 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to initialize database: {e}")
         raise
 
-    # TODO Phase 1.3: Create admin user if not exists
+    # Create admin user on startup (Phase 1.3)
+    try:
+        from app.routes.auth import ADMIN_CREDENTIALS
+        from app.services.auth_service import hash_password
+
+        if ADMIN_CREDENTIALS["password_hash"] is None:
+            ADMIN_CREDENTIALS["password_hash"] = hash_password(settings.admin_password)
+            logger.info(f"Admin user initialized: {settings.admin_username}")
+        else:
+            logger.info("Admin credentials already initialized")
+    except Exception as e:
+        logger.error(f"Failed to initialize admin user: {e}")
+        raise
 
     yield
 
@@ -112,9 +124,9 @@ async def root():
     }
 
 
-# TODO Phase 1.3: Mount auth routes
-# from app.routes import auth
-# app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
+# Phase 1.3: Mount auth routes
+from app.routes import auth
+app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 
 # TODO Phase 2.1: Mount admin routes
 # from app.routes import admin

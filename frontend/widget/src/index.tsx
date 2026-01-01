@@ -12,7 +12,6 @@
  * </script>
  */
 
-import React from 'react'
 import ReactDOM from 'react-dom/client'
 import ChatWidget from './components/ChatWidget'
 import type { WidgetConfig } from './types'
@@ -93,11 +92,7 @@ function init(config: WidgetConfig) {
 
   // Render React app inside shadow root
   widgetRoot = ReactDOM.createRoot(mountPoint)
-  widgetRoot.render(
-    <React.StrictMode>
-      <ChatWidget config={config} />
-    </React.StrictMode>
-  )
+  widgetRoot.render(<ChatWidget config={config} />)
 
   console.log('ChirpWidget initialized:', config.botId)
 }
@@ -106,6 +101,11 @@ function init(config: WidgetConfig) {
  * Destroy the widget and clean up.
  */
 function destroy() {
+  if (!widgetRoot && !widgetContainer) {
+    // Nothing to destroy
+    return
+  }
+
   if (widgetRoot) {
     widgetRoot.unmount()
     widgetRoot = null
@@ -117,8 +117,6 @@ function destroy() {
   }
 
   shadowRoot = null
-
-  console.log('ChirpWidget destroyed')
 }
 
 // Expose global API

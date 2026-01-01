@@ -1,171 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chirp Widget Demo</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Chirp Widget Demo</title>
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      color: white;
-    }
+			body {
+				font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+				background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+				min-height: 100vh;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				padding: 20px;
+				color: white;
+			}
 
-    .container {
-      max-width: 800px;
-      text-align: center;
-    }
+			.container {
+				max-width: 800px;
+				text-align: center;
+			}
 
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      font-weight: 700;
-    }
+			h1 {
+				font-size: 3rem;
+				margin-bottom: 1rem;
+				font-weight: 700;
+			}
 
-    p {
-      font-size: 1.25rem;
-      margin-bottom: 2rem;
-      opacity: 0.9;
-    }
+			p {
+				font-size: 1.25rem;
+				margin-bottom: 2rem;
+				opacity: 0.9;
+			}
 
-    .card {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
+			.card {
+				background: rgba(255, 255, 255, 0.1);
+				backdrop-filter: blur(10px);
+				border-radius: 12px;
+				padding: 2rem;
+				margin-bottom: 2rem;
+				border: 1px solid rgba(255, 255, 255, 0.2);
+			}
 
-    .code-block {
-      background: rgba(0, 0, 0, 0.3);
-      border-radius: 8px;
-      padding: 1rem;
-      text-align: left;
-      font-family: 'Courier New', monospace;
-      font-size: 0.875rem;
-      overflow-x: auto;
-      margin-bottom: 1rem;
-    }
+			.code-block {
+				background: rgba(0, 0, 0, 0.3);
+				border-radius: 8px;
+				padding: 1rem;
+				text-align: left;
+				font-family: 'Courier New', monospace;
+				font-size: 0.875rem;
+				overflow-x: auto;
+				margin-bottom: 1rem;
+			}
 
-    .code-block code {
-      color: #61dafb;
-    }
+			.code-block code {
+				color: #61dafb;
+			}
 
-    .instructions {
-      text-align: left;
-      line-height: 1.8;
-    }
+			.instructions {
+				text-align: left;
+				line-height: 1.8;
+			}
 
-    .instructions ol {
-      margin-left: 1.5rem;
-    }
+			.instructions ol {
+				margin-left: 1.5rem;
+			}
 
-    .instructions li {
-      margin-bottom: 0.5rem;
-    }
+			.instructions li {
+				margin-bottom: 0.5rem;
+			}
 
-    .note {
-      background: rgba(59, 130, 246, 0.2);
-      border-left: 4px solid #3b82f6;
-      padding: 1rem;
-      border-radius: 4px;
-      margin-top: 1rem;
-    }
+			.note {
+				background: rgba(59, 130, 246, 0.2);
+				border-left: 4px solid #3b82f6;
+				padding: 1rem;
+				border-radius: 4px;
+				margin-top: 1rem;
+			}
 
-    .footer {
-      margin-top: 2rem;
-      opacity: 0.7;
-      font-size: 0.875rem;
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>🐦 Chirp Widget Demo</h1>
-    <p>Interactive chatbot widget demonstration</p>
+			.footer {
+				margin-top: 2rem;
+				opacity: 0.7;
+				font-size: 0.875rem;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>🐦 Chirp Widget Demo</h1>
+			<p>Interactive chatbot widget demonstration</p>
 
-    <div class="card">
-      <h2 style="margin-bottom: 1rem;">Setup Instructions</h2>
-      <div class="instructions">
-        <ol>
-          <li><strong>Start the backend server:</strong></li>
-          <div class="code-block">
-            <code>cd backend && uvicorn main:app --reload --port 8000</code>
-          </div>
+			<div class="card">
+				<h2 style="margin-bottom: 1rem">Setup Instructions</h2>
+				<div class="instructions">
+					<ol>
+						<li><strong>Start the backend server:</strong></li>
+						<div class="code-block">
+							<code>cd backend && uvicorn main:app --reload --port 8000</code>
+						</div>
 
-          <li><strong>Create a test bot:</strong> Use the admin API or database to create a bot and note its <code>id</code> and <code>api_key</code></li>
+						<li>
+							<strong>Create a test bot:</strong> Use the admin API or database to create a bot and
+							note its <code>id</code> and <code>api_key</code>
+						</li>
 
-          <li><strong>Update the widget configuration below</strong> with your bot ID and API key</li>
+						<li>
+							<strong>Update the widget configuration below</strong> with your bot ID and API key
+						</li>
 
-          <li><strong>Open this HTML file in a browser</strong></li>
+						<li><strong>Open this HTML file in a browser</strong></li>
 
-          <li><strong>Click the chat button</strong> in the bottom-right corner to test!</li>
-        </ol>
+						<li><strong>Click the chat button</strong> in the bottom-right corner to test!</li>
+					</ol>
 
-        <div class="note">
-          <strong>💡 Note:</strong> The widget loads from <code>dist/widget.js</code> which was built using <code>npm run build</code>.
-          If you make changes to the widget code, rebuild it before testing.
-        </div>
-      </div>
-    </div>
+					<div class="note">
+						<strong>💡 Note:</strong> The widget loads from <code>dist/widget.js</code> which was
+						built using <code>npm run build</code>. If you make changes to the widget code, rebuild
+						it before testing.
+					</div>
+				</div>
+			</div>
 
-    <div class="card">
-      <h2 style="margin-bottom: 1rem;">Widget Configuration</h2>
-      <div class="code-block">
-        <code>
-&lt;script src="dist/widget.js"&gt;&lt;/script&gt;<br>
-&lt;script&gt;<br>
-&nbsp;&nbsp;ChirpWidget.init({<br>
-&nbsp;&nbsp;&nbsp;&nbsp;botId: '<span style="color: #fbbf24;">YOUR_BOT_ID</span>',<br>
-&nbsp;&nbsp;&nbsp;&nbsp;apiKey: '<span style="color: #fbbf24;">YOUR_API_KEY</span>',<br>
-&nbsp;&nbsp;&nbsp;&nbsp;apiUrl: '<span style="color: #fbbf24;">http://localhost:8000</span>'<br>
-&nbsp;&nbsp;})<br>
-&lt;/script&gt;
-        </code>
-      </div>
+			<div class="card">
+				<h2 style="margin-bottom: 1rem">Widget Configuration</h2>
+				<div class="code-block">
+					<code>
+						&lt;script src="dist/widget.js"&gt;&lt;/script&gt;<br />
+						&lt;script&gt;<br />
+						&nbsp;&nbsp;ChirpWidget.init({<br />
+						&nbsp;&nbsp;&nbsp;&nbsp;botId: '<span style="color: #fbbf24">YOUR_BOT_ID</span>',<br />
+						&nbsp;&nbsp;&nbsp;&nbsp;apiKey: '<span style="color: #fbbf24">YOUR_API_KEY</span
+						>',<br />
+						&nbsp;&nbsp;&nbsp;&nbsp;apiUrl: '<span style="color: #fbbf24"
+							>http://localhost:8000</span
+						>'<br />
+						&nbsp;&nbsp;})<br />
+						&lt;/script&gt;
+					</code>
+				</div>
 
-      <p style="font-size: 0.875rem; opacity: 0.8;">
-        Replace <code>YOUR_BOT_ID</code> and <code>YOUR_API_KEY</code> with your actual bot credentials
-      </p>
-    </div>
+				<p style="font-size: 0.875rem; opacity: 0.8">
+					Replace <code>YOUR_BOT_ID</code> and <code>YOUR_API_KEY</code> with your actual bot
+					credentials
+				</p>
+			</div>
 
-    <div class="footer">
-      Built with ❤️ using React, TypeScript, and Vite
-    </div>
-  </div>
+			<div class="footer">Built with ❤️ using React, TypeScript, and Vite</div>
+		</div>
 
-  <!-- Chirp Widget Integration -->
-  <script src="dist/widget.js"></script>
-  <script>
-    // IMPORTANT: Replace these with your actual bot credentials
-    // You can get these from your backend database or API
+		<!-- Chirp Widget Integration -->
+		<script src="dist/widget.js"></script>
+		<script>
+			// IMPORTANT: Replace these with your actual bot credentials
+			// You can get these from your backend database or API
 
-    const BOT_ID = '4e853c86-5afa-4af8-8867-e9f0eeec9374'
-    const API_KEY = '78b0a9ce-e8ea-4b4c-b667-4c438b8ddf74'
+			const BOT_ID = '545d65f9-521f-4f99-9151-34a03f7eed63';
+			const API_KEY = '03291baa-7b06-498d-8654-0443e496031f';
 
-    // Only initialize if credentials are provided
-    if (BOT_ID !== 'YOUR_BOT_ID_HERE' && API_KEY !== 'YOUR_API_KEY_HERE') {
-      ChirpWidget.init({
-        botId: BOT_ID,
-        apiKey: API_KEY,
-        apiUrl: 'http://localhost:8000'
-      })
-    } else {
-      console.warn('⚠️ Please update BOT_ID and API_KEY in demo.html to test the widget')
-    }
-  </script>
-</body>
+			// Only initialize if credentials are provided
+			if (BOT_ID !== 'YOUR_BOT_ID_HERE' && API_KEY !== 'YOUR_API_KEY_HERE') {
+				ChirpWidget.init({
+					botId: BOT_ID,
+					apiKey: API_KEY,
+					apiUrl: 'http://localhost:8000',
+				});
+			} else {
+				console.warn('⚠️ Please update BOT_ID and API_KEY in demo.html to test the widget');
+			}
+		</script>
+	</body>
 </html>

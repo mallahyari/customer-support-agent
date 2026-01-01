@@ -132,9 +132,9 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 from app.routes import admin
 app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
-# TODO Phase 5.3: Mount public routes
-# from app.routes import public
-# app.include_router(public.router, prefix="/api/public", tags=["Public"])
+# Phase 2.2: Mount public routes
+from app.routes import public
+app.include_router(public.router, prefix="/api/public", tags=["Public"])
 
 # TODO Phase 5.3: Mount chat routes
 # from app.routes import chat

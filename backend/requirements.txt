@@ -15,4 +15,5 @@ qdrant-client
 sqlalchemy[asyncio]
 aiosqlite
 greenlet
+pillow
 

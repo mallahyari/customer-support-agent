@@ -90,9 +90,54 @@ async def lifespan(app: FastAPI):
 # Create FastAPI app
 app = FastAPI(
     title="Chirp AI Chatbot API",
-    version="0.1.0",
-    description="Open-source AI chatbot widget backend with RAG",
-    lifespan=lifespan
+    version="1.0.0",
+    description="""
+# Chirp AI Chatbot API
+
+Open-source, self-hostable AI chatbot widget with RAG (Retrieval-Augmented Generation).
+
+## Features
+
+- 🤖 **AI-Powered Chat**: Uses OpenAI GPT-4o-mini for intelligent conversations
+- 🔍 **RAG Support**: Retrieval-Augmented Generation with Qdrant vector database
+- 📚 **Content Ingestion**: Train bots from URLs or direct text
+- 🎨 **Customizable Widget**: Fully customizable chat widget
+- 🔐 **Secure**: Session-based authentication, API key management
+- 📊 **Analytics**: Track message usage and bot performance
+
+## API Endpoints
+
+- **Authentication**: Login/logout for admin dashboard
+- **Admin**: Bot CRUD, avatar management, content ingestion
+- **Public**: Widget configuration, avatar serving
+- **Chat**: Real-time chat with Server-Sent Events (SSE)
+
+## Getting Started
+
+1. Create a bot via `/api/admin/bots`
+2. Train it with content using `/api/admin/bots/{id}/ingest`
+3. Embed the widget on your website
+4. Start chatting!
+
+## Documentation
+
+- **API Docs**: [/docs](/docs) (you are here)
+- **ReDoc**: [/redoc](/redoc)
+- **GitHub**: [https://github.com/yourusername/chirp-app](https://github.com/yourusername/chirp-app)
+    """,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    contact={
+        "name": "Chirp Support",
+        "url": "https://github.com/yourusername/chirp-app",
+        "email": "support@example.com",
+    },
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT",
+    },
 )
 
 # Configure CORS

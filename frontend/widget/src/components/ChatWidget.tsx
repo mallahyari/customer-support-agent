@@ -70,7 +70,7 @@ export default function ChatWidget({ config }: ChatWidgetProps) {
   const sendMessage = async (content: string) => {
     if (!state.botConfig || !content.trim()) return
 
-    // Add user message
+    // Add user message and assistant placeholder in one update
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -78,12 +78,6 @@ export default function ChatWidget({ config }: ChatWidgetProps) {
       timestamp: Date.now(),
     }
 
-    setState((prev) => ({
-      ...prev,
-      messages: [...prev.messages, userMessage],
-    }))
-
-    // Create assistant message placeholder
     const assistantMessageId = `assistant-${Date.now()}`
     let assistantContent = ''
 
@@ -91,6 +85,7 @@ export default function ChatWidget({ config }: ChatWidgetProps) {
       ...prev,
       messages: [
         ...prev.messages,
+        userMessage,
         {
           id: assistantMessageId,
           role: 'assistant',

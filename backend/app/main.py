@@ -128,9 +128,9 @@ async def root():
 from app.routes import auth
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 
-# TODO Phase 2.1: Mount admin routes
-# from app.routes import admin
-# app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
+# Phase 2.1: Mount admin routes
+from app.routes import admin
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
 # TODO Phase 5.3: Mount public routes
 # from app.routes import public

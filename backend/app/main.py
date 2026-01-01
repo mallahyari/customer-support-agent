@@ -33,6 +33,8 @@ async def lifespan(app: FastAPI):
     - Database initialization (Phase 1.2)
     - Creating admin user (Phase 1.3)
     """
+    from app.database import init_db, close_db
+
     settings = get_settings()
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
 
@@ -40,13 +42,22 @@ async def lifespan(app: FastAPI):
     settings.ensure_data_directories()
     logger.info("Data directories initialized")
 
-    # TODO Phase 1.2: Initialize database
+    # Initialize database (create tables)
+    try:
+        await init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
+
     # TODO Phase 1.3: Create admin user if not exists
 
     yield
 
     # Cleanup on shutdown
     logger.info("Shutting down application")
+    await close_db()
+    logger.info("Database connections closed")
 
 
 # Create FastAPI app

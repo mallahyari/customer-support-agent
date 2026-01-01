@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
+import { ChatWidgetPreview } from '@/components/ChatWidgetPreview'
 
 export function BotFormPage() {
   const { id } = useParams<{ id: string }>()
@@ -145,11 +146,15 @@ export function BotFormPage() {
           {isEditMode ? 'Edit Bot' : 'Create New Bot'}
         </h2>
         <p className="mt-1 text-sm text-gray-600">
-          Configure your chatbot settings and appearance
+          Configure your chatbot settings and appearance with live preview
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Split Layout: Form on left, Preview on right */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Form (scrollable) */}
+        <div className="lg:col-span-7">
+          <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="p-6">
           <h3 className="text-lg font-semibold mb-4">Basic Settings</h3>
 
@@ -380,13 +385,30 @@ export function BotFormPage() {
               ? 'Update Bot'
               : 'Create Bot'}
           </Button>
-          {!isEditMode && formData.source_type && formData.source_content && (
-            <p className="text-xs text-gray-500 mt-2 text-right">
-              Bot will be trained automatically after creation
-            </p>
-          )}
         </div>
+        {!isEditMode && formData.source_type && formData.source_content && (
+          <p className="text-xs text-gray-500 mt-2 text-right">
+            Bot will be trained automatically after creation
+          </p>
+        )}
       </form>
+        </div>
+
+        {/* Right Column: Live Preview (sticky) */}
+        <div className="lg:col-span-5">
+          <div className="sticky top-6">
+            <ChatWidgetPreview
+              botName={formData.name || 'My Bot'}
+              welcomeMessage={formData.welcome_message}
+              accentColor={formData.accent_color}
+              position={formData.position}
+              showButtonText={formData.show_button_text}
+              buttonText={formData.button_text}
+              avatarUrl={bot?.avatar_url}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

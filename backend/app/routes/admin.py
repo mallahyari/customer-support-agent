@@ -214,7 +214,15 @@ async def delete_bot(
     await db.delete(bot)
     await db.commit()
 
-    # TODO Phase 3: Delete Qdrant vectors for this bot_id
+    # Delete Qdrant vectors for this bot_id (Phase 4)
+    try:
+        from app.services.qdrant_client import delete_vectors
+
+        await delete_vectors(bot_id)
+        logger.info(f"Deleted Qdrant vectors for bot {bot_id}")
+    except Exception as e:
+        logger.error(f"Failed to delete Qdrant vectors for bot {bot_id}: {e}")
+        # Don't fail the whole operation if Qdrant cleanup fails
 
     logger.info(f"Admin {admin.username} deleted bot: {bot_id} ({bot_name})")
 
@@ -435,3 +443,131 @@ async def regenerate_api_key(
     logger.warning(f"Old API key invalidated: {old_key[:8]}...")
 
     return bot
+
+
+@router.post("/bots/{bot_id}/ingest", response_model=MessageOnlyResponse)
+async def ingest_content(
+    bot_id: str,
+    db: AsyncSession = Depends(get_db),
+    admin: AdminSession = Depends(get_current_admin),
+):
+    """
+    Ingest content for a bot and generate embeddings.
+
+    Reads bot's source_type and source_content, scrapes/processes the content,
+    chunks it, generates embeddings, and stores in Qdrant.
+
+    Args:
+        bot_id: Bot UUID
+        db: Database session
+        admin: Current authenticated admin
+
+    Returns:
+        Success message with chunk count
+
+    Raises:
+        HTTPException: 404 if bot not found, 400 if ingestion fails
+    """
+    # Get existing bot
+    result = await db.execute(select(Bot).where(Bot.id == bot_id))
+    bot = result.scalar_one_or_none()
+
+    if not bot:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Bot with id {bot_id} not found",
+        )
+
+    if not bot.source_content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Bot has no source content configured",
+        )
+
+    logger.info(
+        f"Starting ingestion for bot {bot_id} ({bot.name}): "
+        f"{bot.source_type} - {bot.source_content[:100]}"
+    )
+
+    try:
+        # Import services
+        from app.services.chunker import chunk_text
+        from app.services.embeddings import embed_and_store
+        from app.services.qdrant_client import delete_vectors
+        from app.services.scraper import scrape_url
+
+        # Get content based on source type
+        if bot.source_type == "url":
+            logger.info(f"Scraping URL: {bot.source_content}")
+            text, error = await scrape_url(bot.source_content)
+
+            if error:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Failed to scrape URL: {error}",
+                )
+
+            source = bot.source_content
+
+        elif bot.source_type == "text":
+            logger.info("Using direct text input")
+            text = bot.source_content
+            source = "direct_input"
+
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported source type: {bot.source_type}",
+            )
+
+        if not text or not text.strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No content could be extracted",
+            )
+
+        logger.info(f"Extracted {len(text)} characters of text")
+
+        # Chunk the text
+        logger.info("Chunking text...")
+        chunks = chunk_text(text, source=source)
+
+        if not chunks:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to create chunks from content",
+            )
+
+        logger.info(f"Created {len(chunks)} chunks")
+
+        # Delete old vectors first
+        logger.info("Clearing old vectors...")
+        await delete_vectors(bot_id)
+
+        # Generate embeddings and store
+        logger.info("Generating embeddings and storing in Qdrant...")
+        vector_count = await embed_and_store(bot_id, chunks)
+
+        # Update bot timestamp
+        bot.updated_at = bot.updated_at  # Trigger SQLAlchemy update
+        await db.commit()
+
+        logger.info(
+            f"Admin {admin.username} completed ingestion for bot {bot_id}: "
+            f"{vector_count} vectors stored"
+        )
+
+        return MessageOnlyResponse(
+            message=f"Successfully ingested content: {len(chunks)} chunks, "
+            f"{vector_count} embeddings generated"
+        )
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        logger.error(f"Ingestion failed for bot {bot_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Ingestion failed: {str(e)}",
+        )

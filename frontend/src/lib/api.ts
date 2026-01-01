@@ -171,10 +171,9 @@ export const botApi = {
     return response.json()
   },
 
-  async ingest(id: string, data: IngestRequest): Promise<{ message: string; chunks_count: number }> {
+  async ingest(id: string): Promise<{ message: string }> {
     const response = await fetchWithAuth(`/api/admin/bots/${id}/ingest`, {
       method: 'POST',
-      body: JSON.stringify(data),
     })
     return response.json()
   },

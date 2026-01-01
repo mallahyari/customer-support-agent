@@ -17,6 +17,8 @@ export function BotFormPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const isEditMode = Boolean(id)
+  const [isTraining, setIsTraining] = useState(false)
+  const [trainingMessage, setTrainingMessage] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<{
     name: string
@@ -26,6 +28,8 @@ export function BotFormPage() {
     show_button_text: boolean
     button_text: string
     message_limit: number
+    source_type?: 'url' | 'text'
+    source_content?: string
   }>({
     name: '',
     welcome_message: 'Hi! How can I help you today?',
@@ -52,15 +56,23 @@ export function BotFormPage() {
         show_button_text: bot.show_button_text,
         button_text: bot.button_text,
         message_limit: bot.message_limit,
+        source_type: bot.source_type || undefined,
+        source_content: bot.source_content || undefined,
       })
     }
   }, [bot])
 
   const createMutation = useMutation({
     mutationFn: (data: BotCreate) => botApi.create(data),
-    onSuccess: () => {
+    onSuccess: async (newBot) => {
       queryClient.invalidateQueries({ queryKey: ['bots'] })
-      navigate('/dashboard')
+
+      // If source data is provided, automatically train the bot
+      if (newBot.source_type && newBot.source_content) {
+        await trainBot(newBot.id)
+      } else {
+        navigate('/dashboard')
+      }
     },
   })
 
@@ -69,9 +81,42 @@ export function BotFormPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bots'] })
       queryClient.invalidateQueries({ queryKey: ['bot', id] })
-      navigate('/dashboard')
+      setTrainingMessage(null)
     },
   })
+
+  async function trainBot(botId: string) {
+    setIsTraining(true)
+    setTrainingMessage('Training bot... This may take a minute.')
+
+    try {
+      const result = await botApi.ingest(botId)
+
+      setTrainingMessage(result.message)
+
+      // Redirect after a short delay to show success message
+      setTimeout(() => {
+        navigate('/dashboard')
+      }, 2000)
+    } catch (error: any) {
+      setTrainingMessage(`Training failed: ${error.message || 'Unknown error'}`)
+    } finally {
+      setIsTraining(false)
+    }
+  }
+
+  async function handleTrainBot() {
+    if (!id || !formData.source_type || !formData.source_content) {
+      setTrainingMessage('Please select a source type and provide content first.')
+      return
+    }
+
+    // Save first if there are changes, then train
+    if (formData.source_type && formData.source_content) {
+      await updateMutation.mutateAsync(formData)
+      await trainBot(id)
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -83,7 +128,7 @@ export function BotFormPage() {
     }
   }
 
-  const isLoading = createMutation.isPending || updateMutation.isPending
+  const isLoading = createMutation.isPending || updateMutation.isPending || isTraining
 
   return (
     <div>
@@ -224,6 +269,100 @@ export function BotFormPage() {
           </div>
         </Card>
 
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold mb-4">Training Data</h3>
+
+          <div className="space-y-4">
+            <div>
+              <Label>Source Type</Label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                {(['url', 'text'] as const).map((type) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() =>
+                      setFormData({ ...formData, source_type: type, source_content: '' })
+                    }
+                    className={`px-4 py-2 text-sm rounded border transition-colors ${
+                      formData.source_type === type
+                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                  >
+                    {type === 'url' ? 'Website URL' : 'Direct Text'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {formData.source_type === 'url' && (
+              <div>
+                <Label htmlFor="source_content">Website URL</Label>
+                <Input
+                  id="source_content"
+                  type="url"
+                  value={formData.source_content || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, source_content: e.target.value })
+                  }
+                  placeholder="https://example.com/help"
+                  className="mt-1"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  The bot will scrape and learn from this URL (max 10,000 words)
+                </p>
+              </div>
+            )}
+
+            {formData.source_type === 'text' && (
+              <div>
+                <Label htmlFor="source_content">Training Text</Label>
+                <Textarea
+                  id="source_content"
+                  value={formData.source_content || ''}
+                  onChange={(e) =>
+                    setFormData({ ...formData, source_content: e.target.value })
+                  }
+                  placeholder="Paste your content here..."
+                  rows={8}
+                  className="mt-1 font-mono text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Paste the text content you want the bot to learn from
+                </p>
+              </div>
+            )}
+
+            {isEditMode && formData.source_type && formData.source_content && (
+              <div>
+                <Button
+                  type="button"
+                  onClick={handleTrainBot}
+                  disabled={isTraining || updateMutation.isPending}
+                  className="w-full"
+                >
+                  {isTraining ? 'Training...' : 'Train Bot Now'}
+                </Button>
+                <p className="text-xs text-gray-500 mt-1">
+                  Click to re-train the bot with the current content
+                </p>
+              </div>
+            )}
+
+            {trainingMessage && (
+              <div
+                className={`p-3 rounded text-sm ${
+                  trainingMessage.includes('failed')
+                    ? 'bg-red-50 text-red-700 border border-red-200'
+                    : 'bg-green-50 text-green-700 border border-green-200'
+                }`}
+              >
+                {trainingMessage}
+              </div>
+            )}
+          </div>
+        </Card>
+
         <div className="flex justify-end space-x-4">
           <Button
             type="button"
@@ -233,12 +372,19 @@ export function BotFormPage() {
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading
+            {isTraining
+              ? 'Training...'
+              : isLoading
               ? 'Saving...'
               : isEditMode
               ? 'Update Bot'
               : 'Create Bot'}
           </Button>
+          {!isEditMode && formData.source_type && formData.source_content && (
+            <p className="text-xs text-gray-500 mt-2 text-right">
+              Bot will be trained automatically after creation
+            </p>
+          )}
         </div>
       </form>
     </div>

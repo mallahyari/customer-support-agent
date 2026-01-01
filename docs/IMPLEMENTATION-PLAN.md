@@ -120,9 +120,9 @@ backend/
 
 ### 2.3 API Key Management
 **Tasks:**
-- [ ] Implement key regeneration: `POST /api/admin/bots/{bot_id}/regenerate-key`
-- [ ] Hash API keys with SHA-256 before storage
-- [ ] Create dependency for widget API key validation
+- [x] Implement key regeneration: `POST /api/admin/bots/{bot_id}/regenerate-key`
+- [ ] Hash API keys with SHA-256 before storage (Note: Deferred - not needed for MVP, keys stored as UUIDs)
+- [x] Create dependency for widget API key validation
 
 ---
 

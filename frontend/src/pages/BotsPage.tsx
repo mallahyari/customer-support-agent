@@ -20,6 +20,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 
+// Helper to convert relative avatar URL to absolute
+const getAbsoluteAvatarUrl = (url: string | null | undefined): string | null => {
+  if (!url) return null
+  if (url.startsWith('http')) return url
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  return `${API_URL}${url}`
+}
+
 export function BotsPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -149,16 +157,20 @@ interface BotCardProps {
 
 function BotCard({ bot, onEdit, onTest, onDelete }: BotCardProps) {
   const usagePercent = (bot.message_count / bot.message_limit) * 100
+  const avatarUrl = getAbsoluteAvatarUrl(bot.avatar_url)
 
   return (
     <Card className="p-6 hover:shadow-lg transition-shadow">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
-          {bot.avatar_url ? (
+          {avatarUrl ? (
             <img
-              src={bot.avatar_url}
+              src={avatarUrl}
               alt={bot.name}
               className="w-12 h-12 rounded-full object-cover"
+              onError={() => {
+                console.error('Failed to load bot avatar in card:', avatarUrl)
+              }}
             />
           ) : (
             <div

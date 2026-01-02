@@ -22,6 +22,7 @@ export function BotFormPage() {
   const [trainingMessage, setTrainingMessage] = useState<string | null>(null)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null)
 
   // Helper to convert relative avatar URL to absolute
   const getAbsoluteAvatarUrl = useCallback((url: string | null | undefined): string | null => {
@@ -80,6 +81,17 @@ export function BotFormPage() {
     onSuccess: async (newBot) => {
       queryClient.invalidateQueries({ queryKey: ['bots'] })
 
+      // Upload avatar if one was selected
+      if (selectedAvatarFile) {
+        try {
+          await botApi.uploadAvatar(newBot.id, selectedAvatarFile)
+          queryClient.invalidateQueries({ queryKey: ['bots'] })
+        } catch (error: any) {
+          console.error('Failed to upload avatar after bot creation:', error)
+          // Continue anyway - avatar can be added later
+        }
+      }
+
       // If source data is provided, automatically train the bot
       if (newBot.source_type && newBot.source_content) {
         await trainBot(newBot.id)
@@ -133,7 +145,7 @@ export function BotFormPage() {
 
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !id) return
+    if (!file) return
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
@@ -147,9 +159,19 @@ export function BotFormPage() {
       return
     }
 
+    // In create mode, store the file and preview it
+    if (!isEditMode) {
+      setSelectedAvatarFile(file)
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file)
+      setAvatarPreview(previewUrl)
+      return
+    }
+
+    // In edit mode, upload immediately
     setIsUploadingAvatar(true)
     try {
-      const updatedBot = await botApi.uploadAvatar(id, file)
+      const updatedBot = await botApi.uploadAvatar(id!, file)
 
       // Update preview with absolute URL
       setAvatarPreview(getAbsoluteAvatarUrl(updatedBot.avatar_url))
@@ -165,6 +187,14 @@ export function BotFormPage() {
   }
 
   async function handleAvatarDelete() {
+    // In create mode, just clear the selected file and preview
+    if (!isEditMode) {
+      setSelectedAvatarFile(null)
+      setAvatarPreview(null)
+      return
+    }
+
+    // In edit mode, delete from server
     if (!id || !bot?.avatar_url) return
 
     if (!confirm('Are you sure you want to remove the avatar?')) return
@@ -302,48 +332,21 @@ export function BotFormPage() {
               </div>
             </div>
 
-            {isEditMode && (
-              <div>
-                <Label>Avatar</Label>
-                <div className="mt-2">
-                  {(avatarPreview || bot?.avatar_url) ? (
-                    <div className="flex items-center space-x-4">
-                      <img
-                        key={avatarPreview || bot?.avatar_url}
-                        src={avatarPreview || bot?.avatar_url || ''}
-                        alt="Bot avatar"
-                        className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
-                        onError={(e) => {
-                          console.error('Failed to load avatar:', e.currentTarget.src)
-                        }}
-                      />
-                      <div className="flex flex-col space-y-2">
-                        <label className="cursor-pointer">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleAvatarUpload}
-                            className="hidden"
-                            disabled={isUploadingAvatar}
-                          />
-                          <span className="inline-flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
-                            {isUploadingAvatar ? 'Uploading...' : 'Change Avatar'}
-                          </span>
-                        </label>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleAvatarDelete}
-                          disabled={isUploadingAvatar}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          Remove Avatar
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div>
+            <div>
+              <Label>Avatar {!isEditMode && '(Optional)'}</Label>
+              <div className="mt-2">
+                {avatarPreview ? (
+                  <div className="flex items-center space-x-4">
+                    <img
+                      key={avatarPreview}
+                      src={avatarPreview}
+                      alt="Bot avatar"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                      onError={() => {
+                        console.error('Failed to load avatar:', avatarPreview)
+                      }}
+                    />
+                    <div className="flex flex-col space-y-2">
                       <label className="cursor-pointer">
                         <input
                           type="file"
@@ -352,18 +355,43 @@ export function BotFormPage() {
                           className="hidden"
                           disabled={isUploadingAvatar}
                         />
-                        <div className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
-                          {isUploadingAvatar ? 'Uploading...' : 'Upload Avatar'}
-                        </div>
+                        <span className="inline-flex items-center px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 transition-colors">
+                          {isUploadingAvatar ? 'Uploading...' : 'Change Avatar'}
+                        </span>
                       </label>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Upload an image (max 500KB). Will be resized to 64x64px.
-                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAvatarDelete}
+                        disabled={isUploadingAvatar}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        Remove Avatar
+                      </Button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                        disabled={isUploadingAvatar}
+                      />
+                      <div className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                        {isUploadingAvatar ? 'Uploading...' : 'Upload Avatar'}
+                      </div>
+                    </label>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Upload an image (max 500KB). Will be resized to 64x64px.
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             <div>
               <Label htmlFor="button_text">Button Text</Label>

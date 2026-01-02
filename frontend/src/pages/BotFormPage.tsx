@@ -2,7 +2,7 @@
  * Bot form page - create/edit bot configuration.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { botApi, type BotCreate, type BotUpdate } from '@/lib/api'
@@ -22,6 +22,14 @@ export function BotFormPage() {
   const [trainingMessage, setTrainingMessage] = useState<string | null>(null)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+
+  // Helper to convert relative avatar URL to absolute
+  const getAbsoluteAvatarUrl = useCallback((url: string | null | undefined): string | null => {
+    if (!url) return null
+    if (url.startsWith('http')) return url
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+    return `${API_URL}${url}`
+  }, [])
 
   const [formData, setFormData] = useState<{
     name: string
@@ -62,10 +70,10 @@ export function BotFormPage() {
         source_type: bot.source_type || undefined,
         source_content: bot.source_content || undefined,
       })
-      // Sync avatar preview with bot data
-      setAvatarPreview(bot.avatar_url || null)
+      // Sync avatar preview with bot data, converting to absolute URL
+      setAvatarPreview(getAbsoluteAvatarUrl(bot.avatar_url))
     }
-  }, [bot])
+  }, [bot, getAbsoluteAvatarUrl])
 
   const createMutation = useMutation({
     mutationFn: (data: BotCreate) => botApi.create(data),
@@ -143,8 +151,8 @@ export function BotFormPage() {
     try {
       const updatedBot = await botApi.uploadAvatar(id, file)
 
-      // Update preview
-      setAvatarPreview(updatedBot.avatar_url || null)
+      // Update preview with absolute URL
+      setAvatarPreview(getAbsoluteAvatarUrl(updatedBot.avatar_url))
 
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['bot', id] })
@@ -524,7 +532,7 @@ export function BotFormPage() {
               position={formData.position}
               showButtonText={formData.show_button_text}
               buttonText={formData.button_text}
-              avatarUrl={avatarPreview || bot?.avatar_url}
+              avatarUrl={avatarPreview || getAbsoluteAvatarUrl(bot?.avatar_url)}
             />
           </div>
         </div>

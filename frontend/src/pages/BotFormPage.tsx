@@ -62,6 +62,8 @@ export function BotFormPage() {
         source_type: bot.source_type || undefined,
         source_content: bot.source_content || undefined,
       })
+      // Sync avatar preview with bot data
+      setAvatarPreview(bot.avatar_url || null)
     }
   }, [bot])
 
@@ -299,9 +301,13 @@ export function BotFormPage() {
                   {(avatarPreview || bot?.avatar_url) ? (
                     <div className="flex items-center space-x-4">
                       <img
+                        key={avatarPreview || bot?.avatar_url}
                         src={avatarPreview || bot?.avatar_url || ''}
                         alt="Bot avatar"
                         className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                        onError={(e) => {
+                          console.error('Failed to load avatar:', e.currentTarget.src)
+                        }}
                       />
                       <div className="flex flex-col space-y-2">
                         <label className="cursor-pointer">

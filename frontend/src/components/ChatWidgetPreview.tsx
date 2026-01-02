@@ -84,9 +84,13 @@ export function ChatWidgetPreview({
             <div className="flex items-center space-x-3">
               {avatarUrl ? (
                 <img
+                  key={avatarUrl}
                   src={avatarUrl}
                   alt={botName}
                   className="w-8 h-8 rounded-full object-cover bg-white/20"
+                  onError={() => {
+                    console.error('Failed to load avatar in header preview:', avatarUrl)
+                  }}
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-semibold">
@@ -181,7 +185,13 @@ export function ChatWidgetPreview({
         {showButtonText ? (
           <div className="flex items-center space-x-2 px-5 py-3">
             {avatarUrl && (
-              <img src={avatarUrl} alt={botName} className="w-6 h-6 rounded-full" />
+              <img
+                key={avatarUrl}
+                src={avatarUrl}
+                alt={botName}
+                className="w-6 h-6 rounded-full object-cover"
+                onError={() => console.error('Failed to load avatar in button (text mode):', avatarUrl)}
+              />
             )}
             <span className="text-white font-medium">{buttonText}</span>
             <svg
@@ -201,7 +211,13 @@ export function ChatWidgetPreview({
         ) : (
           <div className="w-14 h-14 flex items-center justify-center">
             {avatarUrl ? (
-              <img src={avatarUrl} alt={botName} className="w-10 h-10 rounded-full" />
+              <img
+                key={avatarUrl}
+                src={avatarUrl}
+                alt={botName}
+                className="w-10 h-10 rounded-full object-cover"
+                onError={() => console.error('Failed to load avatar in button (icon mode):', avatarUrl)}
+              />
             ) : (
               <svg
                 className="w-7 h-7 text-white"

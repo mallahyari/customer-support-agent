@@ -40,6 +40,12 @@ docker-compose up -d
 
 Access dashboard at http://localhost:8000
 
+**Default Login Credentials:**
+- Username: `admin`
+- Password: `admin123!ChangeMeInProduction`
+
+⚠️ **IMPORTANT:** Change the admin password immediately in production! Update `ADMIN_PASSWORD` in your `.env` file.
+
 ---
 
 ## 🏗️ System Architecture
